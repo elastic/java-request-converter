@@ -1,2 +1,2 @@
-rootProject.name = "java-es-request-converter"
+rootProject.name = "java-request-converter"
 
