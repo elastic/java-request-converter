@@ -9,7 +9,7 @@ Experimental converter from elasticsearch json requests to [Java client](https:/
 ## Usage
 
 The converter does not work on its own, it relies on the common [request-converter](https://github.com/elastic/request-converter) to perform an intermediate conversion from the Elasticsearch json request to a more structured/typed request, then converts the intermediate format to a java request.
-The common request-converter is a node library, so the easier way to use both libraries is to write a simple js/typescript script which calls the request-converter first and then calls the java request converter .jar using the [java-caller](https://www.npmjs.com/package/java-caller) library.
+The common request-converter is a node library, so the easier way to use both libraries is to write a simple js/typescript script which calls the request-converter first and then calls the java request converter .jar.
 A full example of a javascript script is provided in this repo at [usage.js](usage/usage.js)
 
 ## Full Example

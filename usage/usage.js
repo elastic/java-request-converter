@@ -18,7 +18,6 @@
  */
 
 const {parseRequest} = require("@elastic/request-converter/dist/parse");
-const {JavaCaller} = require("java-caller");
 
 function getCodeGenParamNames(
     params,
@@ -64,15 +63,12 @@ async function main() {
     let args = [];
     args.push(JSON.stringify(javaReqs));
 
-    // preparing the java caller class to call the java request converter jar
-    const java = new JavaCaller({
-        minimumJavaVersion: 21,
-        jar: "path/to/converter/jar/java-es-request-converter-1.0-SNAPSHOT.jar",
-    });
+    const { stdout, stderr } = await execAsync(
+        `java -jar ${process.env.JAVA_ES_REQUEST_CONVERTER_JAR} args false ""`,
+    );
 
-    const {status, stdout, stderr} = await java.run(args);
     // error
-    if (status) {
+    if (!stdout) {
         console.log(stderr);
         console.log(JSON.stringify(javaReqs));
     }
