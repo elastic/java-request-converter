@@ -1,3 +1,5 @@
+<img alt="Elastic logo" align="right" width="auto" height="auto" src="readme-resources/edti-logo.180x66.png">
+
 # Elasticsearch Java Client Request Converter
 
 Experimental converter from elasticsearch json requests to [Java client](https://github.com/elastic/elasticsearch-java) requests, as seen in the [api docs](https://www.elastic.co/docs/api/doc/elasticsearch/).
