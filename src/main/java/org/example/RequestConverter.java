@@ -25,6 +25,7 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.RequestBase;
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.async_search.SubmitRequest;
+import co.elastic.clients.elasticsearch.cat.CatRequestBase;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.json.JsonData;
@@ -316,7 +317,8 @@ public class RequestConverter {
         // if no request is found, it could be an API like "info" which has no parameter
         return methods.stream()
             .flatMap(m -> Arrays.stream(m.getParameterTypes()))
-            .filter(c -> Objects.nonNull(c.getSuperclass()) && c.getSuperclass().equals(RequestBase.class))
+            .filter(c -> Objects.nonNull(c.getSuperclass()) && (c.getSuperclass().equals(RequestBase.class)
+                                                                || c.getSuperclass().equals(CatRequestBase.class)))
             .findFirst();
     }
 
