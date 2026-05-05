@@ -23,6 +23,7 @@ import co.elastic.clients.ApiClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.RequestBase;
+import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.async_search.SubmitRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
@@ -69,25 +70,25 @@ public class RequestConverter {
     Set<String> imports;
 
     public static final String fullExampleClass = """
-        import co.elastic.clients.elasticsearch.ElasticsearchClient;
-        import java.io.IOException;
+                import co.elastic.clients.elasticsearch.ElasticsearchClient;
+                import java.io.IOException;
         
-        public class App {
+                public class App {
         
-            public static void main(String[] args) throws IOException {
-                String serverUrl = "%s";
+                    public static void main(String[] args) throws IOException {
+                        String serverUrl = "%s";
         
-                try (
-                    ElasticsearchClient client = ElasticsearchClient.of(e -> e
-                        .host(serverUrl)
-                        .apiKey(System.getenv("ELASTIC_API_KEY")))) {
+                        try (
+                            ElasticsearchClient client = ElasticsearchClient.of(e -> e
+                                .host(serverUrl)
+                                .apiKey(System.getenv("ELASTIC_API_KEY")))) {
         
-                %s
+                        %s
         
+                        }
+                    }
                 }
-            }
-        }
-""";
+        """;
 
     public String convertToDsl(String requests, boolean complete, String elasticsearchUrl) {
 
@@ -250,6 +251,16 @@ public class RequestConverter {
                     else if (field.getType().equals(Boolean.class) && entry.getValue() instanceof String) {
                         Method parseMethod = field.getType().getMethod("valueOf", String.class);
                         field.set(builder, parseMethod.invoke(field, entry.getValue().toString()));
+                    }
+                    // case Time -> time (string with unit)
+                    else if (field.getType().equals(Time.class) && entry.getValue() instanceof String) {
+                        Time value = Time.of(t -> t.time(entry.getValue().toString()));
+                        field.set(builder, value);
+                    }
+                    // case Time -> offset (int)
+                    else if (field.getType().equals(Time.class) && entry.getValue() instanceof Number) {
+                        Time value = Time.of(t -> t.offset((Integer) entry.getValue()));
+                        field.set(builder, value);
                     }
                     // case union
                     else if (Arrays.stream(field.getType().getInterfaces()).anyMatch(i -> i.getSimpleName().equals(

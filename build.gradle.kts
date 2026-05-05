@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     implementation("org.apache.commons:commons-text:1.14.0")
-    implementation("co.elastic.clients:elasticsearch-java:9.2.2")
+    implementation("co.elastic.clients:elasticsearch-java:9.4.0")
 
     val jacksonVersion = "2.18.3"
     // Apache 2.0
@@ -34,7 +34,8 @@ tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "org.example.Main"
     }
-    from(configurations.runtimeClasspath.get()
+    from(
+        configurations.runtimeClasspath.get()
         .onEach { println("add from dependencies: ${it.name}") }
         .map { if (it.isDirectory) it else zipTree(it) })
 }
