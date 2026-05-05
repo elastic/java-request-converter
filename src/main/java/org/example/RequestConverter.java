@@ -42,6 +42,7 @@ import jakarta.json.stream.JsonParser;
 import org.apache.commons.text.CaseUtils;
 import org.jboss.forge.roaster.Roaster;
 
+import javax.annotation.Nullable;
 import java.beans.Introspector;
 import java.io.IOException;
 import java.io.StringReader;
@@ -454,7 +455,7 @@ public class RequestConverter {
             field.setAccessible(true);
             Object fieldValue = field.get(object);
 
-            if (fieldValue != null && notEmpty(fieldValue)) {
+            if (fieldValue != null && notEmpty(field, fieldValue)) {
                 nofields = false;
                 writer.append("\n");
                 indent(writer, depth);
@@ -768,8 +769,15 @@ public class RequestConverter {
     // if a list has only a single element it's always possible to replace it with an instance of the element
     private void handleList(StringBuilder writer, Object list, String name, int depth, boolean inListOrMap,
                             boolean cannotSingleElement) {
+        // empty, but required list
+        if (((List) list).isEmpty()) {
+            if (complete) {
+                imports.add("import java.util.List;");
+            }
+            writer.append("List.of())");
+        }
         // if class is an array or a list, find out if just one or multi
-        if (((List) list).size() > 1 || cannotSingleElement) {
+        else if (((List) list).size() > 1 || cannotSingleElement) {
             if (complete) {
                 imports.add("import java.util.List;");
             }
@@ -793,7 +801,14 @@ public class RequestConverter {
     //  and the lambda expression to build the single element
     private void handleMap(StringBuilder writer, Object map, String name, int depth, boolean inListOrMap,
                            boolean cannotSingleElement) {
-        if (((Map) map).size() > 1 || cannotSingleElement) {
+        // empty, but required map
+        if (((Map) map).isEmpty()) {
+            if (complete) {
+                imports.add("import java.util.Map;");
+            }
+            writer.append("Map.of())");
+        }
+        else if (((Map) map).size() > 1 || cannotSingleElement) {
             if (complete) {
                 imports.add("import java.util.Map;");
             }
@@ -844,11 +859,18 @@ public class RequestConverter {
     }
 
     // if maps or lists are empty field can be ignored
-    private boolean notEmpty(Object o) {
+    // only if they are not nullable
+    private boolean notEmpty(Field f, Object o) {
         if (o instanceof Map) {
+            if (!f.isAnnotationPresent(Nullable.class)){
+                return true;
+            }
             return !((Map<?, ?>) o).isEmpty();
         }
         if (o instanceof List) {
+            if (!f.isAnnotationPresent(Nullable.class)){
+                return true;
+            }
             return !((List<?>) o).isEmpty();
         }
         // it wasn't a list or map
