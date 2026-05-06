@@ -644,9 +644,9 @@ public class RequestConverter {
     }
 
     private void handleBlockString(Object string, StringBuilder writer, boolean inListOrMap) {
-        writer.append("\"\"\"")
+        writer.append("\"\"\"\n")
             .append(string)
-            .append("\"\"\"");
+            .append("\n\"\"\"");
         if (!inListOrMap) {
             writer.append(")");
         }
