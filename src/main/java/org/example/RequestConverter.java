@@ -194,8 +194,8 @@ public class RequestConverter {
                     if (field.getType().isAssignableFrom(List.class)) {
                         // check if list of enums
                         Type type = field.getGenericType();
-                        if (type instanceof ParameterizedType) {
-                            Type innerType = ((ParameterizedType) type).getActualTypeArguments()[0];
+                        if (type instanceof ParameterizedType ptype) {
+                            Type innerType = ptype.getActualTypeArguments()[0];
                             if (Arrays.stream(((Class) innerType).getInterfaces()).anyMatch(i -> i.getSimpleName().equals(
                                 "JsonEnum"))) {
                                 Class<? extends Enum> en = (Class<? extends Enum>) innerType;
@@ -223,13 +223,14 @@ public class RequestConverter {
                                         enumValue)));
                                 }
                             }
-                        } else {
-                            // check if comma separated list of values
-                            String[] values = entry.getValue().toString().split(",");
-                            if (values.length > 1) {
-                                field.set(builder, Arrays.asList(values));
-                            } else {
-                                field.set(builder, List.of(entry.getValue()));
+                            else {
+                                // check if comma separated list of values
+                                String[] values = entry.getValue().toString().split(",");
+                                if (values.length > 1) {
+                                    field.set(builder, Arrays.asList(values));
+                                } else {
+                                    field.set(builder, List.of(entry.getValue()));
+                                }
                             }
                         }
                     }
