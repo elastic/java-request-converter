@@ -191,48 +191,9 @@ public class RequestConverter {
                     String fieldName = snakeToCamel(entry.getKey());
                     Field field = builder.getClass().getDeclaredField(fieldName);
                     field.setAccessible(true);
+                    // case list
                     if (field.getType().isAssignableFrom(List.class)) {
-                        // check if list of enums
-                        Type type = field.getGenericType();
-                        if (type instanceof ParameterizedType ptype) {
-                            Type innerType = ptype.getActualTypeArguments()[0];
-                            if (Arrays.stream(((Class) innerType).getInterfaces()).anyMatch(i -> i.getSimpleName().equals(
-                                "JsonEnum"))) {
-                                Class<? extends Enum> en = (Class<? extends Enum>) innerType;
-                                Object value = entry.getValue();
-                                // could be a comma separated list of enums
-                                if (value instanceof List list) {
-                                    List splitEnums = list.stream()
-                                        // all enums in the java client have first capital letter and then
-                                        // lowercase
-                                        .map(snake -> snakeToCamelCapitalized((String) snake))
-                                        .map(e -> {
-                                            try {
-                                                return Enum.valueOf((Class<? extends Enum>) Class.forName(en.getName()),
-                                                    (String) e);
-                                            } catch (ClassNotFoundException ex) {
-                                                throw new RuntimeException(ex);
-                                            }
-                                        }).toList();
-                                    field.set(builder, splitEnums);
-                                } else {
-                                    // single enum
-                                    String enumValue = snakeToCamelCapitalized(entry.getValue().toString());
-                                    field.set(builder,
-                                        List.of(Enum.valueOf((Class<? extends Enum>) Class.forName(en.getName()),
-                                        enumValue)));
-                                }
-                            }
-                            else {
-                                // check if comma separated list of values
-                                String[] values = entry.getValue().toString().split(",");
-                                if (values.length > 1) {
-                                    field.set(builder, Arrays.asList(values));
-                                } else {
-                                    field.set(builder, List.of(entry.getValue()));
-                                }
-                            }
-                        }
+                        fillBuilderList(builder, entry, field);
                     }
                     // case string which is actually a number
                     else if (field.getType().getSuperclass().equals(Number.class) && entry.getValue() instanceof String) {
@@ -242,11 +203,7 @@ public class RequestConverter {
                     // enum
                     else if (Arrays.stream(field.getType().getInterfaces()).anyMatch(i -> i.getSimpleName().equals(
                         "JsonEnum"))) {
-                        Class<? extends Enum> en = (Class<? extends Enum>) field.getType();
-                        // all enums in the java client have first capital letter and then lowercase
-                        String enumValue = snakeToCamelCapitalized(entry.getValue().toString());
-                        field.set(builder, Enum.valueOf((Class<? extends Enum>) Class.forName(en.getName()),
-                            enumValue));
+                        fillBuilderEnum(builder, entry, field);
                     } else {
                         field.set(builder, entry.getValue());
                     }
@@ -265,22 +222,12 @@ public class RequestConverter {
                     field.setAccessible(true);
                     // case list
                     if (field.getType().isAssignableFrom(List.class)) {
-                        // check if comma separated list of values
-                        String[] values = entry.getValue().toString().split(",");
-                        if (values.length > 1) {
-                            field.set(builder, Arrays.asList(values));
-                        } else {
-                            field.set(builder, List.of(entry.getValue()));
-                        }
+                        fillBuilderList(builder, entry, field);
                     }
                     // case enum
                     else if (Arrays.stream(field.getType().getInterfaces()).anyMatch(i -> i.getSimpleName().equals(
                         "JsonEnum"))) {
-                        Class<? extends Enum> en = (Class<? extends Enum>) field.getType();
-                        // all enums in the java client have first capital letter and then lowercase
-                        String enumValue = snakeToCamelCapitalized(entry.getValue().toString());
-                        field.set(builder, Enum.valueOf((Class<? extends Enum>) Class.forName(en.getName()),
-                            enumValue));
+                        fillBuilderEnum(builder, entry, field);
                     }
                     // case string which is actually a number
                     else if (field.getType().getSuperclass().equals(Number.class) && entry.getValue() instanceof String) {
@@ -338,6 +285,57 @@ public class RequestConverter {
                     SimpleJsonpMapper.INSTANCE);
             } catch (InvocationTargetException e) {
                 throw new RuntimeException("Could not build request body: {" + e.getTargetException() + "}");
+            }
+        }
+    }
+
+    private void fillBuilderEnum(Object builder, Map.Entry<String, Object> entry, Field field) throws IllegalAccessException, ClassNotFoundException {
+        Class<? extends Enum> en = (Class<? extends Enum>) field.getType();
+        // all enums in the java client have first capital letter and then lowercase
+        String enumValue = snakeToCamelCapitalized(entry.getValue().toString());
+        field.set(builder, Enum.valueOf((Class<? extends Enum>) Class.forName(en.getName()),
+            enumValue));
+    }
+
+    private void fillBuilderList(Object builder, Map.Entry<String, Object> entry, Field field) throws IllegalAccessException, ClassNotFoundException {
+        // check if list of enums
+        Type type = field.getGenericType();
+        if (type instanceof ParameterizedType ptype) {
+            Type innerType = ptype.getActualTypeArguments()[0];
+            if (Arrays.stream(((Class) innerType).getInterfaces()).anyMatch(i -> i.getSimpleName().equals(
+                "JsonEnum"))) {
+                Class<? extends Enum> en = (Class<? extends Enum>) innerType;
+                Object value = entry.getValue();
+                // could be a comma separated list of enums
+                if (value instanceof List list) {
+                    List splitEnums = list.stream()
+                        // all enums in the java client have first capital letter and then
+                        // lowercase
+                        .map(snake -> snakeToCamelCapitalized((String) snake))
+                        .map(e -> {
+                            try {
+                                return Enum.valueOf((Class<? extends Enum>) Class.forName(en.getName()),
+                                    (String) e);
+                            } catch (ClassNotFoundException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }).toList();
+                    field.set(builder, splitEnums);
+                } else {
+                    // single enum
+                    String enumValue = snakeToCamelCapitalized(entry.getValue().toString());
+                    field.set(builder,
+                        List.of(Enum.valueOf((Class<? extends Enum>) Class.forName(en.getName()),
+                            enumValue)));
+                }
+            } else {
+                // check if comma separated list of values
+                String[] values = entry.getValue().toString().split(",");
+                if (values.length > 1) {
+                    field.set(builder, Arrays.asList(values));
+                } else {
+                    field.set(builder, List.of(entry.getValue()));
+                }
             }
         }
     }
