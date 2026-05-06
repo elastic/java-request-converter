@@ -661,15 +661,15 @@ public class RequestConverter {
         }
     }
 
-    // making whatever is in the value compliant with json by escaping all quotes
+    // making whatever is in the value compliant with json by using block quotes
     private void handleJsonData(Object json, StringBuilder writer, boolean inListOrMap) {
         if (complete) {
             imports.add("import co.elastic.clients.json.JsonData;");
         }
         writer.append("JsonData.fromJson(")
-            .append("\"")
-            .append(json.toString().replaceAll("\"", "\\\\\""))
-            .append("\"").append(")");
+            .append("\"\"\"\n")
+            .append(json.toString())
+            .append("\n\"\"\"").append(")");
         if (!inListOrMap) {
             writer.append(")");
         }
