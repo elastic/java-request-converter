@@ -662,7 +662,7 @@ public class RequestConverter {
     }
 
     // making whatever is in the value compliant with json by using block quotes
-    // if there's quotes in between the string
+    // if there's quotes in between the string, otherwise just escaping quotes
     private void handleJsonData(Object json, StringBuilder writer, boolean inListOrMap) {
         if (complete) {
             imports.add("import co.elastic.clients.json.JsonData;");
@@ -674,7 +674,9 @@ public class RequestConverter {
                 .append(json)
                 .append("\n\"\"\"");
         } else {
-            writer.append(json);
+                writer.append("\"")
+                .append(json.toString().replaceAll("\"", "\\\\\""))
+                .append("\"");
         }
         writer.append(")");
         if (!inListOrMap) {
