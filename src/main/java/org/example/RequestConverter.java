@@ -582,7 +582,7 @@ public class RequestConverter {
         if (object instanceof String) {
             // special case: instead of escaping queries,
             // using triple quotes
-            if (name.equals("query")) {
+            if (name.equals("query") || name.equals("arguments")) {
                 handleBlockString(object, writer, inListOrMap);
             } else {
                 handleString(object, writer, inListOrMap);
