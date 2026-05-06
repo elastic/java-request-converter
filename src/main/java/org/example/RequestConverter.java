@@ -582,7 +582,13 @@ public class RequestConverter {
             return true;
         }
         if (object instanceof String) {
-            handleString(object, writer, inListOrMap);
+            // special case: instead of escaping queries,
+            // using triple quotes
+            if (name.equals("query")) {
+                handleBlockString(object, writer, inListOrMap);
+            } else {
+                handleString(object, writer, inListOrMap);
+            }
             return true;
         }
         if (object instanceof JsonEnum) {
@@ -634,6 +640,15 @@ public class RequestConverter {
         } else if (prim instanceof Long) {
             writer.append("L");
         }
+        if (!inListOrMap) {
+            writer.append(")");
+        }
+    }
+
+    private void handleBlockString(Object string, StringBuilder writer, boolean inListOrMap) {
+        writer.append("\"\"\"")
+            .append(string)
+            .append("\"\"\"");
         if (!inListOrMap) {
             writer.append(")");
         }
