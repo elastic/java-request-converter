@@ -545,7 +545,11 @@ public class RequestConverter {
             if (className.equals("QueryRule")) {
                 writer.append(className)
                     .append(".queryRuleOf(");
-            } else {
+            } else if (className.equals("RoleDescriptor")) {
+                writer.append(className)
+                    .append(".roleDescriptorOf(");
+            }
+            else {
                 writer.append(className)
                     .append(".of(");
             }
