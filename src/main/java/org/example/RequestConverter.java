@@ -583,7 +583,7 @@ public class RequestConverter {
             // special case: instead of escaping queries,
             // using triple quotes
             if (name.equals("query") || name.equals("arguments")) {
-                handleBlockString(object, writer, inListOrMap);
+                handleBlockString(object, writer, depth, inListOrMap);
             } else {
                 handleString(object, writer, inListOrMap);
             }
@@ -643,10 +643,13 @@ public class RequestConverter {
         }
     }
 
-    private void handleBlockString(Object string, StringBuilder writer, boolean inListOrMap) {
-        writer.append("\"\"\"\n")
-            .append(string)
-            .append("\n\"\"\"");
+    private void handleBlockString(Object string, StringBuilder writer, int depth, boolean inListOrMap) {
+        writer.append("\"\"\"\n");
+        indent(writer, depth);
+        writer.append(string);
+        writer.append("\n");
+        indent(writer, depth);
+        writer.append("\"\"\"");
         if (!inListOrMap) {
             writer.append(")");
         }
