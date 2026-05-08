@@ -846,7 +846,7 @@ public class RequestConverter {
             writer.append("List.of())");
         }
         // if class is an array or a list, find out if just one or multi
-        else if (((List) list).size() > 1 || cannotSingleElement) {
+        else if (((List) list).size() > 1 || cannotSingleElement || inListOrMap) {
             if (complete) {
                 imports.add("import java.util.List;");
             }
@@ -876,7 +876,7 @@ public class RequestConverter {
                 imports.add("import java.util.Map;");
             }
             writer.append("Map.of())");
-        } else if (((Map) map).size() > 1 || cannotSingleElement) {
+        } else if (((Map) map).size() > 1 || cannotSingleElement || inListOrMap) {
             if (complete) {
                 imports.add("import java.util.Map;");
             }
