@@ -33,6 +33,7 @@ import co.elastic.clients.json.JsonEnum;
 import co.elastic.clients.json.JsonpDeserializer;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.SimpleJsonpMapper;
+import co.elastic.clients.util.ApiTypeHelper;
 import co.elastic.clients.util.DateTime;
 import co.elastic.clients.util.NamedValue;
 import co.elastic.clients.util.Pair;
@@ -43,7 +44,6 @@ import jakarta.json.stream.JsonParser;
 import org.apache.commons.text.CaseUtils;
 import org.jboss.forge.roaster.Roaster;
 
-import javax.annotation.Nullable;
 import java.beans.Introspector;
 import java.io.IOException;
 import java.io.StringReader;
@@ -493,7 +493,7 @@ public class RequestConverter {
             field.setAccessible(true);
             Object fieldValue = field.get(object);
 
-            if (fieldValue != null && notEmpty(field, fieldValue)) {
+            if (fieldValue != null && isDefined(fieldValue)) {
                 nofields = false;
                 writer.append("\n");
                 indent(writer, depth);
@@ -926,20 +926,14 @@ public class RequestConverter {
         writer.append("\n");
     }
 
-    // if maps or lists are empty field can be ignored
-    // only if they are not nullable
-    private boolean notEmpty(Field f, Object o) {
+    // A list/map field should be rendered only if the Java client itself would
+    // serialize it, even if empty.
+    private boolean isDefined(Object o) {
         if (o instanceof Map) {
-            if (!f.isAnnotationPresent(Nullable.class)) {
-                return true;
-            }
-            return !((Map<?, ?>) o).isEmpty();
+            return ApiTypeHelper.isDefined((Map<?, ?>) o);
         }
         if (o instanceof List) {
-            if (!f.isAnnotationPresent(Nullable.class)) {
-                return true;
-            }
-            return !((List<?>) o).isEmpty();
+            return ApiTypeHelper.isDefined((List<?>) o);
         }
         // it wasn't a list or map
         return true;
