@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     implementation("org.apache.commons:commons-text:1.14.0")
-    implementation("co.elastic.clients:elasticsearch-java:9.4.0")
+    implementation("co.elastic.clients:elasticsearch-java:9.5.3")
 
     val jacksonVersion = "2.18.3"
     // Apache 2.0
