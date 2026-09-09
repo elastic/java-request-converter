@@ -1,0 +1,42 @@
+name: Update elasticsearch-java version
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Get latest elasticsearch-java version from Maven Central
+        id: latest
+        run: |
+          latest=$(curl -sf https://repo1.maven.org/maven2/co/elastic/clients/elasticsearch-java/maven-metadata.xml \
+            | grep -oPm1 '(?<=<latest>)[^<]+')
+          if [ -z "$latest" ]; then
+            echo "Failed to determine latest version" >&2
+            exit 1
+          fi
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+
+      - name: Update build.gradle.kts
+        run: |
+          sed -i -E 's|(implementation\("co\.elastic\.clients:elasticsearch-java:)[^"]+("\))|\1${{ steps.latest.outputs.version }}\2|' build.gradle.kts
+          git diff build.gradle.kts
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Update elasticsearch-java to ${{ steps.latest.outputs.version }}"
+          title: "Update elasticsearch-java to ${{ steps.latest.outputs.version }}"
+          body: |
+            Updates the `co.elastic.clients:elasticsearch-java` dependency to the latest
+            version available on Maven Central: `${{ steps.latest.outputs.version }}`.
+
+            Triggered manually via workflow dispatch.
+          branch: update-elasticsearch-java
+          delete-branch: true
